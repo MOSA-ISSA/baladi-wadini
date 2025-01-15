@@ -1,0 +1,16 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "server.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "public/**",
+            "use": "@vercel/static"
+        }
+    ],
+    "env": {
+        "MONGO_URI": "mongodb+srv://baladi-wadini:baladi-wadini123@cluster0.rbu8f.mongodb.net/"
+    }
+}

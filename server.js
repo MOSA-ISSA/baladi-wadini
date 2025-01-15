@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB connection
-const mongooseLink = "mongodb+srv://baladi-wadini:baladi-wadini123@cluster0.rbu8f.mongodb.net/"
+const mongooseLink = process.env.MONGO_URI || "mongodb+srv://baladi-wadini:baladi-wadini123@cluster0.rbu8f.mongodb.net/"
 mongoose.connect(mongooseLink);
 
 // When MongoDB is connected
@@ -94,7 +94,7 @@ app.post('/api/addPoint', (req, res) => {
                         const pointsInCurrentWindow = user.points.filter((point) => {
                             return Math.floor(point / 60000) === timeWindow;
                         });
-                        
+
 
                         if (pointsInCurrentWindow.length === 0) {
                             // Add point if it's a new time window
@@ -136,6 +136,8 @@ app.get('/', (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//     console.log(`Server running on http://localhost:${PORT}`);
+// });
+
+module.exports = app;
