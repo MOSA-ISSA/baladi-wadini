@@ -1,11 +1,11 @@
 // Function to show a notification message
-function showNotification(message, duration, color) {
+function showNotification(message, duration = 3000, color = "#333") {
   const notification = document.getElementById("notification");
   if (notification) {
     notification.textContent = message;
     notification.style.display = "block";
-    notification.style.backgroundColor = color || "#333";
-    setTimeout(() => (notification.style.display = "none"), duration || 3000);
+    notification.style.backgroundColor = color;
+    setTimeout(() => (notification.style.display = "none"), duration);
   }
 }
 
@@ -15,7 +15,9 @@ function isWithinAllowedTime(testDate) {
   const nowInMinutes = now.getHours() * 60 + now.getMinutes(); // current time in minutes
 
   // Get the test date time in minutes (if no test date, use current time)
-  const testTimeInMinutes = testDate ? testDate.getHours() * 60 + testDate.getMinutes() : nowInMinutes;
+  const testTimeInMinutes = testDate
+    ? testDate.getHours() * 60 + testDate.getMinutes()
+    : nowInMinutes;
 
   // Define allowed time ranges (in minutes)
   const allowedTimes = [
@@ -27,15 +29,14 @@ function isWithinAllowedTime(testDate) {
   ];
 
   // Check if the given time is within any of the allowed ranges
-  return allowedTimes.some(
-    ([start, end]) => testTimeInMinutes >= start && testTimeInMinutes <= end
-  );
-};
+  return allowedTimes.some(([start, end]) => testTimeInMinutes >= start && testTimeInMinutes <= end);
+}
 
 // Function to update points based on the visit time condition
 function updatePointsBasedOnTime() {
   const lastVisitTime = localStorage.getItem("lastVisitTime");
   const points = parseInt(localStorage.getItem("points")) || 0;
+
   if (isWithinAllowedTime()) {
     console.log("new point:", points + 1);
     fetch("/api/addPoint", {
@@ -50,22 +51,23 @@ function updatePointsBasedOnTime() {
         if (res.success) {
           const newPoints = res.points;
           localStorage.setItem("points", newPoints);
-          const point = document.getElementById("pointsDisplay");
-          point.textContent = `${newPoints} نقطة`;
+          const pointDisplay = document.getElementById("pointsDisplay");
+          if (pointDisplay) pointDisplay.textContent = `${newPoints} نقطة`;
           localStorage.setItem("lastVisitTime", new Date().getTime()); // Update last visit time
-          showNotification("لقد حصلت على نقطة جديدة!", 3000, "green"); // Show point increment message
+          showNotification("لقد حصلت على نقطة جديدة!", 3000, "green");
         } else {
           showNotification(res.message, 3000, "red"); // Show error message
         }
       })
       .catch((error) => {
         console.error("Error:", error);
-        showNotification("خطاء في الاتصال بالخادم!", 3000 * 60, "red");
+        showNotification("خطأ في الاتصال بالخادم!", 3000 * 60, "red");
       });
   }
 
   // Update the points display on the page
-  document.getElementById("pointsDisplay").textContent = `${localStorage.getItem("points")} نقطة`;
+  const pointsDisplay = document.getElementById("pointsDisplay");
+  if (pointsDisplay) pointsDisplay.textContent = `${localStorage.getItem("points")} نقطة`;
 }
 
 // Function to register phone number and check user data
@@ -74,11 +76,6 @@ function registerPhoneNumber(localNumber) {
   const pointsDisplay = document.getElementById("pointsDisplay");
   const notification = document.getElementById("notification");
   const thankYouMessage = document.getElementById("thank-you-message");
-  const pointsInput = document.getElementById("pointsDisplay");
-  console.log("phoneNumber: ", phoneNumber || !localNumber);
-  // console.log("pointsDisplay: ", pointsDisplay);
-  // console.log("thankYouMessage: ", thankYouMessage);
-  // console.log("pointsInput: ", pointsInput);
 
   if (!isWithinAllowedTime()) {
     showNotification("التسجيل مسموح فقط خلال اوقات الصلاة.", 1000 * 60, "red");
@@ -86,11 +83,9 @@ function registerPhoneNumber(localNumber) {
   }
 
   // Check if phone number is valid and not empty
-  if (!localNumber) {
-    if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
-      showNotification("يرجى إدخال رقم هاتف صالح!", 3000, "red");
-      return;
-    }
+  if (!localNumber && (!phoneNumber || !/^\d{10}$/.test(phoneNumber))) {
+    showNotification("يرجى إدخال رقم هاتف صالح!", 3000, "red");
+    return;
   }
 
   fetch("/api/register", {
@@ -103,16 +98,13 @@ function registerPhoneNumber(localNumber) {
     .then((response) => response.json())
     .then((res) => {
       if (res.success) {
-        const data = res.data;
-        const points = res.points;
-        console.log("points", points);
+        const points = res.points || 0;
 
+        // Show thank you message and update points
         thankYouMessage.style.display = "block";
-        pointsInput.value = points; // Update hidden points value
-        pointsDisplay.textContent = `${points || " 0 "} نقطة`;
-        pointsDisplay.style.display = "block";
-        localStorage.setItem("phoneNumber", phoneNumber); // Save phone number in localStorage
-        localStorage.setItem("points", points); // Save points in localStorage
+        pointsDisplay.textContent = `${points} نقطة`;
+        localStorage.setItem("phoneNumber", phoneNumber || localNumber);
+        localStorage.setItem("points", points);
         localStorage.setItem("lastVisitTime", new Date().getTime()); // Save visit time
         showNotification("تم التسجيل بنجاح!", 3000, "green");
       } else {
@@ -135,10 +127,10 @@ function showThankYouMessage(phoneNumber) {
   pointsDisplay.style.display = "block";
 
   const userPhone = document.getElementById("user-phone");
-  userPhone.textContent = phoneNumber;
+  if (userPhone) userPhone.textContent = phoneNumber;
 
   const instagramLink = document.getElementById("instagram-link");
-  instagramLink.style.display = "block";
+  if (instagramLink) instagramLink.style.display = "block";
 
   const registrationForm = document.getElementById("registration-form");
   if (registrationForm) registrationForm.style.display = "none";
@@ -148,20 +140,16 @@ function showThankYouMessage(phoneNumber) {
 
 // Event listener for DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
-  // localStorage.clear();
   const phoneNumber = localStorage.getItem("phoneNumber");
+
   if (phoneNumber) {
     console.log("on page start phoneNumber: ", phoneNumber);
-    registerPhoneNumber(phoneNumber);
     showThankYouMessage(phoneNumber);
     const registrationForm = document.getElementById("registration-form");
     if (registrationForm) registrationForm.style.display = "none";
   } else {
     if (!isWithinAllowedTime()) {
       showNotification("التسجيل مسموح فقط خلال اوقات الصلاة.", 1000 * 60, "red");
-      return;
     }
   }
-
-  // updatePointsBasedOnTime(); // Ensure points are updated on page load
 });
