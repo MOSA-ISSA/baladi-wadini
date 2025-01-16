@@ -10,6 +10,12 @@
             "use": "@vercel/static"
         }
     ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/server.js"
+        }
+    ],
     "env": {
         "MONGO_URI": "mongodb+srv://baladi-wadini:baladi-wadini123@cluster0.rbu8f.mongodb.net/"
     }
